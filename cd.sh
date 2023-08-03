@@ -1,0 +1,1 @@
+pushd $SDE_INSTALL
