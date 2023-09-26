@@ -127,18 +127,6 @@ control ConcurrencyControl(inout headers_t hdr , in bit<16> slot_idx,
 	}
     
     apply {
-        // dependency test
-        // c_filled_read_tbl.apply();
-        // c_filled_clean_tbl.apply();
-        // c_filled_set_tbl.apply();
-        // if (filled == 1) {
-        //     c_filled_set_tbl.apply();
-        //     // return cached state data
-        // }
-        // else {
-        //     c_filled_clean_tbl.apply();
-        //     // store the fetched state data
-        // }
 
         c_filled_check_tbl.apply();
         if (filled == 0) {

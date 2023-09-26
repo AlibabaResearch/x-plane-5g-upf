@@ -11,46 +11,9 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
         pkt.advance(PORT_METADATA_SIZE);
         meta.l4_lookup = {0, 0};
         transition select(ig_intr_md.ingress_port) {
-            //NF_PORT: check_if_split;
             default: parse_ethernet;
         }
     }
-
-    // state check_if_split {
-    //     /* First bit of Ethernet is 1 if we split the packet */
-    //     meta.is_split = pkt.lookahead<bit<48>>()[7:0];
-    //     /* Split in chunks only if it was originally split */
-    //     transition select(meta.is_split) {
-    //         0x1: parse_chunks;
-    //         default: accept;
-    //     }
-    // }
-
-    // state parse_chunks {
-    //     pkt.extract(hdr.hdr_chunks);
-    //     transition select(hdr.hdr_chunks.blk_5[7:0]) {
-    //         0x11: parse_payload_splitter_marker;
-    //         0x06: parse_chunks_tcp;
-    //         default: accept;
-    //     }
-    // }
-
-    // state parse_chunks_tcp {
-    //     pkt.extract(hdr.hdr_chunks_tcp);
-    //     transition parse_payload_splitter_marker;
-    // }
-
-    // state parse_payload_splitter_marker {
-    //     transition select(pkt.lookahead<bit<32>>()) {
-    //         PAYLOAD_SPLITTER_MARKER: parse_payload_splitter;
-    //         default: accept;
-    //     }
-    // }
-
-    // state parse_payload_splitter {
-    //     pkt.extract(hdr.payload_splitter);
-    //     transition parse_payload_request;
-    // }
 
     state parse_ethernet {
         pkt.extract(hdr.ethernet);
@@ -98,7 +61,7 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
     state parse_tcp {
         pkt.extract(hdr.tcp);
         meta.l4_lookup = { hdr.tcp.src_port, hdr.tcp.dst_port };
-        transition accept;//check_ip_len;
+        transition accept;
     }
 
     state parse_udp {
@@ -108,47 +71,13 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
             UDP_PORT_ROCEV2: parse_ib_bth;
             L4Port.GTP_GPDU: parse_gtpu;
             L4Port.IPV4_IN_UDP: parse_inner_ipv4;
-            default: accept;//check_ip_len;
+            default: accept;
         }
     }
-
-    // state check_ip_len {
-	//     //pkt.extract(hdr.udp_payload);
-    //     transition select(hdr.ipv4.total_len) {
-    //         #if SPLIT==64
-    //             0x003F &&& 0xFFC0: dont_split; // <= 63
-    //             0x0040: dont_split; // == 64
-    //         #elif SPLIT==128
-    //             0x007F &&& 0xFF80: dont_split; // <= 127
-    //             0x0080: dont_split; // == 128
-    //         #elif SPLIT==256
-    //             0x00FF &&& 0xFF00: dont_split; // <= 255
-    //             0x0100: dont_split; // == 256
-    //         #elif SPLIT==512
-    //             0x01FF &&& 0xFE00: dont_split; // <= 511
-    //             0x0200: dont_split; // == 512
-    //         #elif SPLIT==1024
-    //             0x03FF &&& 0xFC00: dont_split; // <= 1023
-    //             0x0400: dont_split; // == 1024
-    //         #endif
-    //         default: split;
-    //     }
-    // }
-
-    // state dont_split {
-    //     meta.to_split = 0x0;
-    //     transition accept;
-    // }
-
-    // state split {
-    //     meta.to_split = 0x1;
-    //     transition accept;
-    // }
 
     // parse gtpu
     state parse_gtpu {
         pkt.extract(hdr.gtpu);
-        //meta.teid = hdr.gtpu.teid;
         transition select(hdr.gtpu.ex_flag, hdr.gtpu.seq_flag, hdr.gtpu.npdu_flag) {
             (0, 0, 0): parse_inner_ipv4;
             default: parse_gtpu_options;
@@ -173,13 +102,8 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
         }
     }
 
-    //-----------------
-    // Inner packet content
-    //-----------------
-
     state parse_inner_ipv4 {
         pkt.extract(hdr.inner_ipv4);
-        //meta.inner_l4_proto = hdr.inner_ipv4.protocol;
         transition select(hdr.inner_ipv4.protocol) {
             ipv4_protocol_t.UDP:  parse_inner_udp;
             ipv4_protocol_t.TCP:  parse_inner_tcp;
@@ -190,15 +114,11 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
 
     state parse_inner_udp {
         pkt.extract(hdr.inner_udp);
-        //meta.inner_l4_sport = hdr.inner_udp.src_port;
-        //meta.inner_l4_dport = hdr.inner_udp.dst_port;
         transition accept;
     }
 
     state parse_inner_tcp {
         pkt.extract(hdr.inner_tcp);
-        //meta.inner_l4_sport = hdr.inner_tcp.src_port;
-        //meta.inner_l4_dport = hdr.inner_tcp.dst_port;
         transition accept;
     }
 
@@ -210,7 +130,6 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
     // rdma packet
 
     state parse_ib_bth {
-        //meta.to_split = 0x1;
         pkt.extract(hdr.ib_bth);
         transition select(hdr.ib_bth.opcode) {
             ib_opcode_t.RDMA_ACK: parse_ib_aeth;
@@ -221,12 +140,12 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
 
     state parse_ib_aeth {
         pkt.extract(hdr.ib_aeth);
-        transition accept;//parse_payload_request;
+        transition accept;
     }
 
     state parse_ib_aeth2 {
         pkt.extract(hdr.ib_aeth);
-        transition parse_lookup_resp_type;//parse_payload_request;
+        transition parse_lookup_resp_type;
     }
 
 
@@ -243,7 +162,6 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
     state parse_resp_ue_flow {
         pkt.extract(hdr.ue_flow_key);
         pkt.extract(hdr.ue_flow_rule);
-        //transition accept;
         pkt.extract(hdr.next_fetch_info);
         transition parse_packet_ue_key;
     }
@@ -266,11 +184,6 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
     }
 
     state parse_resp_pdr_part1 {
-        //pkt.extract(hdr.pdr5);
-        //pkt.extract(hdr.pdr6);
-        //pkt.extract(hdr.pdr7);
-        //pkt.extract(hdr.pdr8);
-        //pkt.extract(hdr.pdr9);
         pkt.extract(hdr.next_fetch_info);
         meta.current_qp_idx = hdr.next_fetch_info.current_qp_idx;
         meta.current_server_idx = hdr.next_fetch_info.current_server_idx;
@@ -287,7 +200,6 @@ parser IngressParser(packet_in pkt, out headers_t hdr, out ig_metadata_t meta, o
         transition accept;
     }
 
-    //[lyz: skip padding for now]
     state parse_payload_request {
         pkt.extract(hdr.payload_request);
         transition select(hdr.payload_request.padding) {
@@ -330,7 +242,7 @@ control IngressDeparser(packet_out pkt, inout headers_t hdr, in ig_metadata_t me
                 meta.server_index,
                 meta.server_mac_addr_1,
                 meta.server_mac_addr_2,
-                meta.server_ip_addr,
+                //meta.server_ip_addr,
                 meta.rdma_remote_key,
                 meta.pdr_fetch_round_id
             });
@@ -346,7 +258,7 @@ control IngressDeparser(packet_out pkt, inout headers_t hdr, in ig_metadata_t me
                 meta.server_index,
                 meta.server_mac_addr_1,
                 meta.server_mac_addr_2,
-                meta.server_ip_addr,
+                //meta.server_ip_addr,
                 meta.rdma_remote_key,
                 meta.pdr_fetch_round_id
             });

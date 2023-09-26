@@ -4,6 +4,12 @@
 #include "types_r.p4"
 #include "define_r.p4"
 #include "configuration.p4"
+
+
+// register tail_register {
+//     width: 32;
+//     instance_count: ARRAY_NUM;
+// }
 //#include "types.p4"
 
 /* Chunked header */
@@ -58,7 +64,7 @@ header mirror_truncate_h {
     bit<16> server_index;
     bit<16> server_mac_addr_1;
     bit<32> server_mac_addr_2;
-    bit<32> server_ip_addr;
+    //bit<32> server_ip_addr;
     bit<32> rdma_remote_key;
     bit<8> pdr_fetch_round_id;
 }
@@ -396,8 +402,8 @@ header pdr_next_fetch_info_h {
     bit<16> payload_len;
     bit<32> mem_offset;
     bit<32> rdma_remote_key;
-    bit<16> ints_fwd; // timestamp for latency test
-    bit<16> ets_fwd;
+    //bit<16> ints_fwd; // timestamp for latency test
+    //bit<16> ets_fwd;
     bit<16> st_lk; // timestamp for latency test
     /*paging*/
     //bit<16> ed_lk;
@@ -561,7 +567,7 @@ struct ig_metadata_t {
 /* EGRESS METADATA */
 struct eg_metadata_t {
     mirror_truncate_h mirror_truncate;
-    mirror_qp_restore_h mirror_qp_restore;
+    //mirror_qp_restore_h mirror_qp_restore;
 }
 
 #endif /* _HEADERS_ */

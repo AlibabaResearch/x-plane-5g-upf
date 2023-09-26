@@ -11,36 +11,14 @@ parser EgressParser(packet_in pkt, out headers_t hdr, out eg_metadata_t meta, ou
         pkt_type_t pkt_type = pkt.lookahead<pkt_type_t>();
         transition select(pkt_type) {
             PKT_TYPE_MIRROR_TRUNCATE: parse_truncate_mirror;
-            PKT_TYPE_MIRROR_QP_RESTORE: parse_qp_restore_mirror;
-            default: parse_payload_splitter_marker;
+            PKT_TYPE_MIRROR_QP_RESTORE: reject;
+            default: parse_ethernet;
         }
     }
 
     state parse_truncate_mirror {
         pkt.extract(meta.mirror_truncate);
         transition parse_ethernet;
-    }
-
-    state parse_qp_restore_mirror {
-        pkt.extract(meta.mirror_qp_restore);
-        transition parse_ethernet;
-    }
-
-    state parse_payload_splitter_marker {
-        transition select(pkt.lookahead<bit<32>>()) {
-            PAYLOAD_SPLITTER_MARKER: parse_payload_splitter;
-            default: parse_ethernet;
-        }
-    }
-
-    state parse_payload_splitter {
-        pkt.extract(hdr.payload_splitter);
-        transition parse_bridge_payload;
-    }
-
-    state parse_bridge_payload {
-        pkt.extract(hdr.bridge_payload);
-        transition parse_ib_bth;
     }
 
     state parse_ethernet {
@@ -117,17 +95,8 @@ parser EgressParser(packet_in pkt, out headers_t hdr, out eg_metadata_t meta, ou
 
     state parse_ib_aeth {
         pkt.extract(hdr.ib_aeth);
-        transition accept;//parse_payload_request;
+        transition accept;
     }
-
-    // state parse_ib_aeth2 {
-    //     pkt.extract(hdr.ib_aeth);
-    //     pkt.extract(hdr.ue_key);
-    //     pkt.extract(hdr.lookup_resp_type);
-    //     pkt.extract(hdr.ue);
-    //     //pkt.extract(hdr.next_fetch_info);
-    //     transition parse_next_fetch_info;//parse_payload_request;
-    // }
 
     state parse_next_fetch_info {
         pkt.extract(hdr.next_fetch_info);

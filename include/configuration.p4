@@ -18,18 +18,13 @@
 // the above two can share the same hash algorithm
 #define SERVER_SIZE_POWER 1 // 8 servers
 #define QP_POWER 5 // 2^QP_POWER qps to randomly distribute the requests to 
-//#define SERVER_SIZE_MASK 0x00000007
-//#define QP_SIZE_MASK 0x0000000f
 
-//#define NUM_PDR_PER_FETCH 5
-//define ENTRY_SLOT_LEN_SHIFT 12 
-#define ENTRY_SLOT_LEN 4096 // = 2 << ENTRY_SLOT_LEN_SHIFT
-//#define MAX_NUM_FETCH_SHIFT 3
+#define ENTRY_SLOT_LEN 4096 
 #define MAX_PDR_TBL_NUM 8
-#define MAX_FETCH_ID 9 // = 2 << MAX_NUM_FETCH_SHIFT + 1 (the first ue_flow lookup)
-#define PDR_TABLE_OFFSET 0x20000000 //memory divided into two parts: for UE / PDR, this is the size for UE table: 0.5 GB
+#define MAX_FETCH_ID 9 
+#define PDR_TABLE_OFFSET 0x20000000 
 /*paging*/
-#define TO_BUFFER_OFFSET 0x20000000 // [paging todo:]
+#define TO_BUFFER_OFFSET 0x20000000 
 #define UE_TABLE_OFFSET 0x20000000
 
 /* Servers Configurations */
@@ -45,24 +40,18 @@
 #define HEADER_REGISTER_SIZE 2000
 #define PKT_MIN_LENGTH 71
 
-/* Port Numbers */
-#define SERVER_1_PORT 0
-#define SINGLE_SERVER_PORT 188
-#define SERVER_2_PORT 20
-#define SERVER_3_PORT 16
-#define SERVER_4_PORT 32
+/* Port Number */
+#define SINGLE_SERVER_PORT 144
 
-#define NF_PORT 36
-
-#define OUTPUT_1_PORT 48
-#define OUTPUT_2_PORT 52
-#define OUTPUT_3_PORT 44
-#define OUTPUT_4_PORT 40
 
 #define CONCURRENCY_CONTROL_TABLE_SIZE_POWER 13 
 #define CONCURRENCY_CONTROL_TABLE_SIZE 8192 // 2^CONCURRENCY_CONTROL_TABLE_SIZE_POWER
+#define CONCURRENCY_CONTROL_TABLE_MASK 0x1fff
 
 //for hot table cache
 #define CM_SIZE_POWER 13 // len of hash range
+
+/* software UPF port */
+#define SOFT_UPF_PORT 188
 
 #endif /* _CONFIGURATION_ */
