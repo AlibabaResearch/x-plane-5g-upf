@@ -104,7 +104,7 @@ control FetchRule(inout headers_t hdr, inout ig_metadata_t meta,
         hdr.next_fetch_info.current_server_idx = 0;
         hdr.next_fetch_info.current_qp_idx = current_qp_idx;
         hdr.next_fetch_info.payload_len = payload_len;
-        hdr.next_fetch_info.mem_offset = UE_FLOW_TABLE_OFFSET;
+        hdr.next_fetch_info.mem_offset = UE_TABLE_OFFSET; //UE_FLOW_TABLE_OFFSET;
         hdr.next_fetch_info.rdma_remote_key = rdma_remote_key;
 
 		hdr.icrc.setValid(); 
